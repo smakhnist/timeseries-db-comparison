@@ -1,0 +1,17 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  questdb:
+    image: questdb/questdb:latest
+    container_name: questdb
+    ports:
+      - "9001:9000"   # Web UI
+      - "8812:8812"   # Postgres wire protocol
+      - "9009:9009"   # InfluxDB line protocol
+    volumes:
+      - questdb-data:/root/.questdb
+    restart: unless-stopped
+
+volumes:
+  questdb-data:
