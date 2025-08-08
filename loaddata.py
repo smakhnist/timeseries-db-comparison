@@ -48,7 +48,7 @@ def get_client_or_conn(dbtype: str) -> tuple:
     psycopg2_con = None; clickhouse_client = None
 
     if dbtype == 'clickhouse':
-        clickhouse_client = get_client(host='localhost', port=8123, username='default', password='my_secure_password')
+        clickhouse_client = get_client(host='localhost', port=8123, username='default', password='my_secure_password', compress=True)
     elif dbtype == 'postgresql':
         psycopg2_con = psycopg2.connect(host="localhost",
                                   port=5445,
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     clean_previous_data(psycopg2_con, click_cl)
 
     TRADING_DAYS = 100  # Number of ticks per day
-    TICKS_PER_DAY = 100 # trades in one day
+    TICKS_PER_DAY = 100000 # trades in one day
     for i in range(TRADING_DAYS):
         start_time = datetime.fromisoformat('2025-01-01') + timedelta(days=i)
         print(f"Generating data for {start_time.strftime('%Y-%m-%d')}")
