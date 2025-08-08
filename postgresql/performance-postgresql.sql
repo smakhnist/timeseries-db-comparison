@@ -13,7 +13,7 @@ FROM (
              price,
              volume,
              timestamp,
-             DATE_TRUNC('minute', timestamp) AS bucket
+             date_trunc('minute', timestamp) - INTERVAL '1 minute' * (EXTRACT(MINUTE FROM timestamp)::int % 5) AS bucket
          FROM trades
          WHERE symbol = 'AAPL' AND
                timestamp BETWEEN '2025-02-01 00:00:00' AND '2025-02-04 00:00:00'
