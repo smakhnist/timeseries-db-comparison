@@ -10,6 +10,6 @@ SELECT
     last(price, timestamp) AS close,
     sum(volume) AS volume
 FROM trades
-WHERE timestamp >= '2025-02-01' AND timestamp < '2025-02-04'
+WHERE timestamp BETWEEN '2025-02-01' AND '2025-02-04'
   AND symbol = 'AAPL'
 GROUP BY bucket
