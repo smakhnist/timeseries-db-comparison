@@ -3,7 +3,7 @@ SELECT COUNT(*) FROM trades;
 
 -- ohlcv query for AAPL trades --
 SELECT
-    time_bucket('1 minute', timestamp) AS bucket,
+    time_bucket('5 minute', timestamp) AS bucket,
     first(price, timestamp) AS open,
     max(price) AS high,
     min(price) AS low,
