@@ -11,7 +11,7 @@ SELECT
     anyLast(price) AS close,
     sum(volume) AS volume
 FROM trades
-WHERE timestamp >= toDateTime('2025-01-01 00:00:00')
+WHERE timestamp >= toDateTime('2025-02-01 00:00:00')
   AND timestamp < toDateTime('2025-02-04 00:00:00')
   AND symbol = 'AAPL'
 GROUP BY symbol, bucket
