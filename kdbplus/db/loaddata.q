@@ -10,9 +10,11 @@ times:{[i] 00:00:00.000+i*(floor 86400000%TICKS_PER_DAY)*00:00:00.001} each til 
 idx:TICKS_PER_DAY?count SYMBOLS;
 symbols:SYMBOLS[idx];
 sizes:TICKS_PER_DAY?1000;
-prices:{[i] (first 1?100)+100+100*i} each idx;
+prices:{[i] (first 1?100.0) + 100 + 100 * i} each idx;
 is_buy:(TICKS_PER_DAY)?0b;
 trades:([] dates:dates+times; symbols:symbols; prices:prices; sizes:sizes; is_buy:is_buy);
+trades: update `g#symbols from trades; // group by symbols
+trades: update `s#dates from trades; // dates are sorted
 sss:`$(":db/",(string dd),"/trades_splayed/");
 sss set .Q.en[`:db;] trades;
  } each 2025.01.01+til DAYS

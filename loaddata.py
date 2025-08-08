@@ -107,7 +107,7 @@ if __name__ == "__main__":
     clean_previous_data(psycopg2_con, click_cl)
 
     TRADING_DAYS = 100  # Number of ticks per day
-    TICKS_PER_DAY = 100000 # trades in one day
+    TICKS_PER_DAY = 1000000 # trades in one day
     for i in range(TRADING_DAYS):
         start_time = datetime.fromisoformat('2025-01-01') + timedelta(days=i)
         print(f"Generating data for {start_time.strftime('%Y-%m-%d')}")
