@@ -9,6 +9,9 @@ services:
       - "9001:9000"   # Web UI
       - "8812:8812"   # Postgres wire protocol
       - "9009:9009"   # InfluxDB line protocol
+    environment:
+      - QDB_LINE_TCP_ENABLED=true
+      - QDB_LINE_TCP_BIND_TO=0.0.0.0:9009
     volumes:
       - questdb-data:/root/.questdb
     restart: unless-stopped

@@ -1,10 +1,10 @@
 import random
 import sys
+import time
 from datetime import datetime, timedelta
-
 import psycopg
+import socket
 from clickhouse_connect import get_client
-# from psycopg2.extras import execute_values
 
 
 SYMBOLS = ["AAPL", "MSFT", "GOOG"]
@@ -33,6 +33,21 @@ def insert_ticks_clickhouse(client, records):
         column_names=['timestamp', 'symbol', 'price', 'volume', 'is_buy']
     )
 
+def insert_ticks_questdb(records):
+    BUFFER_STEP = 100000
+    for i in range(0, len(records), BUFFER_STEP):
+        questdb_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        questdb_sock.connect(("localhost", 9009))
+
+        batch = records[i:i + BUFFER_STEP]
+        lines = []
+        for record in batch:
+            lines.append(f"trades,symbol={record[1]} price={record[2]},volume={record[3]}i,is_buy={record[4]} {int(record[0].timestamp() * 1e9)}")
+        payload = "\n".join(lines) + "\n"
+        questdb_sock.sendall(payload.encode("utf-8"))
+        time.sleep(0.01)
+        questdb_sock.close()
+
 def insert_ticks_psycopg(con, records):
     with con.cursor() as cur:
         insert_sql = """
@@ -44,8 +59,8 @@ def insert_ticks_psycopg(con, records):
 
 
 def get_client_or_conn(dbtype: str) -> tuple:
-    global psycopg_con, clickhouse_client
-    psycopg_con = None; clickhouse_client = None
+    global psycopg_con, clickhouse_client, questdb_sock
+    psycopg_con = None; clickhouse_client = None; questdb_sock = None
 
     if dbtype == 'clickhouse':
         clickhouse_client = get_client(host='localhost', port=8123, username='default', password='my_secure_password', compress=True)
@@ -57,10 +72,10 @@ def get_client_or_conn(dbtype: str) -> tuple:
                                   password="mypassword")
     elif dbtype == 'questdb':
         psycopg_con = psycopg.connect(host="localhost",
-                                port=8812,
-                                dbname="qdb",
-                                user="admin",
-                                password="quest")
+                                      port=8812,
+                                      dbname="qdb",
+                                      user="admin",
+                                      password="quest")
     elif dbtype == 'timescaledb':
         psycopg_con = psycopg.connect(host="localhost",
                                 port=5442,
@@ -75,10 +90,24 @@ def get_client_or_conn(dbtype: str) -> tuple:
 def clean_previous_data(psycopg_con, click_cl):
     if dbtype == 'clickhouse':
         click_cl.command("TRUNCATE TABLE trades")
-    elif dbtype in ['postgresql', 'questdb', 'timescaledb']:
+    elif dbtype in ['postgresql', 'timescaledb']:
         with psycopg_con.cursor() as cur:
             # Create table if it does not exist
             cur.execute("TRUNCATE TABLE trades")
+            psycopg_con.commit()
+    elif dbtype       == 'questdb':
+        with psycopg_con.cursor() as cur:
+            # Create table if it does not exist
+            cur.execute("DROP TABLE IF EXISTS trades;")
+            cur.execute("""
+                        CREATE TABLE trades (
+                                                timestamp TIMESTAMP,
+                                                symbol SYMBOL,           -- indexed automatically
+                                                price DOUBLE,
+                                                volume INT,
+                                                is_buy BOOLEAN
+                        ) timestamp(timestamp);
+                        """)
             psycopg_con.commit()
     else:
         raise ValueError(f"Unsupported database type: {dbtype}")
@@ -117,7 +146,9 @@ if __name__ == "__main__":
         # insert the generated data into the database
         if dbtype == 'clickhouse':
             insert_ticks_clickhouse(click_cl, tick_data)
-        elif dbtype in ['postgresql', 'questdb', 'timescaledb']:
+        elif dbtype  == 'questdb':
+            insert_ticks_questdb(tick_data)
+        elif dbtype in ['postgresql', 'timescaledb']:
             insert_ticks_psycopg(psycopg_con, tick_data)
         else:
             raise ValueError(f"Unsupported database type: {dbtype}")
