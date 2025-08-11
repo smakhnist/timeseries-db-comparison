@@ -45,7 +45,7 @@ def insert_ticks_questdb(records):
             lines.append(f"trades,symbol={record[1]} price={record[2]},volume={record[3]}i,is_buy={record[4]} {int(record[0].timestamp() * 1e9)}")
         payload = "\n".join(lines) + "\n"
         questdb_sock.sendall(payload.encode("utf-8"))
-        time.sleep(0.01)
+        time.sleep(0.02)
         questdb_sock.close()
 
 def insert_ticks_psycopg(con, records):
