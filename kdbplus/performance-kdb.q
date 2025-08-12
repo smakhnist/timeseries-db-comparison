@@ -9,5 +9,5 @@ open: first prices,
       volume: sum sizes
 by bucket: 0D00:05 xbar dates
     from trades_splayed
-   where dates within (2025.02.01;2025.02.04), symbols = `AAPL
+   where date within (2025.02.01;2025.02.04), symbols = `AAPL
 r
